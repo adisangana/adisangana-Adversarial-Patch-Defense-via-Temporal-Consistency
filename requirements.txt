@@ -1,9 +1,16 @@
 rawpy
 imageio
 Pillow
-"numpy<2"
+numpy<2
 opencv-python
 ultralytics
 torch
 torchvision
 matplotlib
+PyYAML
+requests
+scipy
+tqdm
+pandas
+seaborn
+gitpython

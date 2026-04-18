@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import warnings
 from pathlib import Path
 
 from tc_defense import (
@@ -51,8 +52,17 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def configure_warning_filters() -> None:
+    warnings.filterwarnings(
+        "ignore",
+        message=r"`torch\.cuda\.amp\.autocast\(args\.\.\.\)` is deprecated\..*",
+        category=FutureWarning,
+    )
+
+
 def main() -> None:
     args = parse_args()
+    configure_warning_filters()
 
     if not args.dataset.exists():
         print(f"ERROR: dataset directory not found: {args.dataset}", file=sys.stderr)

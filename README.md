@@ -58,15 +58,6 @@ If `--output-csv` is omitted, the script writes the report inside the image fold
 <images-dir>/<folder-name>_yolov5_stop_sign_report.csv
 ```
 
-## CSV Example
-
-```csv
-brightness,degree,distance,top_classified_object,top_classified_object_accuracy,stopsign_accuracy
-130,00,00,person,0.675126,0.000000
-130,00,01,person,0.620032,0.000000
-130,00,12,stop sign,0.884211,0.884211
-```
-
 ## Common Options
 
 Show all CLI options:
@@ -159,9 +150,20 @@ This loads all degree sequences in the dataset, evaluates each sequence from the
 
 Typical generated files:
 
-- `results/sequence_degree00.png`
-- `results/brightness_degree00.png`
-- `results/summary.png`
+- `results/sequence_degree00.png` (Sequence analysis plot showing attacks and defended labels)
+- `results/brightness_degree00.png` (Brightness analysis plot showing scene stability gates)
+- `results/summary.png` (Overall performance summary across all sequences)
+
+**Understanding the Plots:**
+*   **`sequence_degree*.png` Keys:**
+    *   **Raw Labels:** The original classification from YOLOv5.
+    *   **Defended Labels:** The final classification after applying the temporal consistency defense.
+    *   **Flagged as Attack:** Indicates frames where the defense identified an inconsistency between the raw label and the temporal consensus.
+    *   **Consensus:** The temporal majority vote over the preceding frames (window size).
+*   **`brightness_degree*.png` Keys:**
+    *   **Luminance (blue line):** Mean image brightness for the current frame.
+    *   **Window Average (orange line):** The average mean brightness of the preceding frames in the temporal window.
+    *   **Delta Gate (red shaded area):** Frames where the absolute difference between current luminance and window average exceeds the `brightness-thresh`. These frames are treated as scene changes (e.g. abrupt lighting shifts) and temporal consistency checks are bypassed.
 
 ### Pipeline Options
 
@@ -173,15 +175,15 @@ python3 pipeline.py --help
 
 Common flags:
 
-- `--dataset`: dataset directory containing paired `*.png` and `*.json` files
-- `--window-size`: number of previous frames used for temporal consensus
-- `--brightness-thresh`: luminance-delta threshold used to suppress scene-change false positives
-- `--ground-truth`: expected correct class label, default `stop sign`
-- `--out-dir`: output directory for plots, default `results/`
-- `--degrees`: restrict evaluation to specific degree values
-- `--no-plots`: skip plot generation entirely
-- `--show-plots`: display plots interactively instead of only saving them
-- `--report-json`: write the computed metrics to a JSON file
+- `--dataset`: dataset directory containing paired `*.png` and `*.json` files. Required.
+- `--window-size`: number of previous frames used for temporal consensus. Increasing this makes the defense more robust to long-duration attacks but slower to adapt to genuine scene changes. Default: 5.
+- `--brightness-thresh`: luminance-delta threshold used to suppress scene-change false positives. Lower values make the defense more sensitive to lighting changes (bypassing the temporal check more often). Default: 10.0.
+- `--ground-truth`: expected correct class label. Used for computing metrics. Default `stop sign`.
+- `--out-dir`: output directory for plots and JSON report. Default `results/`.
+- `--degrees`: restrict evaluation to specific degree values (e.g., `--degrees 0 10`). Useful for debugging specific angles.
+- `--no-plots`: skip plot generation entirely. Faster execution if only console metrics are needed.
+- `--show-plots`: display plots interactively instead of only saving them.
+- `--report-json`: write the computed metrics to a JSON file at the specified path.
 
 ### Regenerate YOLO JSONs Before Defense
 
@@ -198,9 +200,9 @@ python3 pipeline.py \
 
 Relevant YOLO flags:
 
-- `--run-yolo`: run YOLOv5 on the dataset before defense
-- `--yolo-model`: YOLOv5 model variant to load
-- `--yolo-conf`: confidence threshold passed to YOLOv5
+- `--run-yolo`: run YOLOv5 on the dataset before defense. This ensures detections are up-to-date with your current YOLO configuration.
+- `--yolo-model`: YOLOv5 model variant to load (e.g., `yolov5s`, `yolov5m`).
+- `--yolo-conf`: confidence threshold passed to YOLOv5. Lowering this increases recall but might introduce false positives.
 
 ## Other Project Scripts
 
@@ -212,5 +214,5 @@ Relevant YOLO flags:
 ## Notes
 
 - If `./.venv/bin/python` exists, `evaluate_stop_signs.py` automatically re-runs itself with that interpreter.
-- The script suppresses the noisy `urllib3` LibreSSL warning and the YOLOv5 `amp.autocast` deprecation warning during inference.
+- The scripts suppress the noisy `urllib3` LibreSSL warning and the YOLOv5 `amp.autocast` deprecation warning during inference.
 - Large model weights and virtual environments usually should not be committed to Git. In most cases, commit the source files and let users install dependencies locally.

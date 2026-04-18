@@ -127,10 +127,86 @@ On first use, if the default YOLOv5 assets are not already available, the script
 
 If `yolov5s.pt` already exists in the repository root, the script will reuse it.
 
+## Temporal Consistency Pipeline
+
+The end-to-end defense entry point is [`pipeline.py`](./pipeline.py).
+
+It loads a dataset directory of matching `*.png` and `*.json` frames, applies the temporal consistency defense, prints per-degree and overall metrics, and optionally saves plots plus a JSON report.
+
+### Expected Dataset Layout
+
+`pipeline.py` expects image and detection files in the same folder, for example:
+
+```text
+130/
+  brightness130_degree00_distance00.png
+  brightness130_degree00_distance00.json
+  brightness130_degree00_distance01.png
+  brightness130_degree00_distance01.json
+```
+
+The JSON files should follow the schema written by [`detect.py`](./detect.py). Frames missing their sibling PNG image are skipped.
+
+### Run the Pipeline
+
+From the repository root, run:
+
+```bash
+python3 pipeline.py --dataset 130
+```
+
+This loads all degree sequences in the dataset, runs the sliding-window defense, prints a summary table, and saves plots under `results/` by default.
+
+Typical generated files:
+
+- `results/sequence_degree00.png`
+- `results/brightness_degree00.png`
+- `results/summary.png`
+
+### Pipeline Options
+
+Show all CLI options:
+
+```bash
+python3 pipeline.py --help
+```
+
+Common flags:
+
+- `--dataset`: dataset directory containing paired `*.png` and `*.json` files
+- `--window-size`: sliding window size used for temporal consensus
+- `--brightness-thresh`: luminance-delta threshold used to suppress scene-change false positives
+- `--ground-truth`: expected correct class label, default `stop sign`
+- `--out-dir`: output directory for plots, default `results/`
+- `--degrees`: restrict evaluation to specific degree values
+- `--no-plots`: skip plot generation entirely
+- `--show-plots`: display plots interactively instead of only saving them
+- `--report-json`: write the computed metrics to a JSON file
+
+### Regenerate YOLO JSONs Before Defense
+
+If you want the pipeline to rerun YOLOv5 and overwrite existing detection JSON files before applying the defense:
+
+```bash
+python3 pipeline.py \
+  --dataset 130 \
+  --run-yolo \
+  --yolo-model yolov5s \
+  --yolo-conf 0.25 \
+  --report-json results/report.json
+```
+
+Relevant YOLO flags:
+
+- `--run-yolo`: run YOLOv5 on the dataset before defense
+- `--yolo-model`: YOLOv5 model variant to load
+- `--yolo-conf`: confidence threshold passed to YOLOv5
+
 ## Other Project Scripts
 
 - [`convert_raw.py`](./convert_raw.py)
 - [`detect.py`](./detect.py)
+- [`pipeline.py`](./pipeline.py)
 - [`visualize.py`](./visualize.py)
 
 ## Notes

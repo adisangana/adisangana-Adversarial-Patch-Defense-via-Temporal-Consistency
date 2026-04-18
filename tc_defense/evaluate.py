@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from .defense import DefenseConfig, FrameResult
+from .defense import FrameResult
 
 
 @dataclass
@@ -39,17 +39,27 @@ def evaluate_sequence(
     total = len(results)
     raw_correct = sum(1 for r in results if r.raw_label == ground_truth_label)
     defended_correct = sum(1 for r in results if r.defended_label == ground_truth_label)
-    attacked = sum(1 for r in results if r.raw_label != ground_truth_label)
+    # Exclude unlabeled frames from attack/clean proxy metrics.
+    attacked = sum(
+        1 for r in results
+        if r.raw_label is not None and r.raw_label != ground_truth_label
+    )
     correctly_flagged = sum(
         1 for r in results
-        if r.raw_label != ground_truth_label and r.flagged_as_attack
+        if r.raw_label is not None
+        and r.raw_label != ground_truth_label
+        and r.flagged_as_attack
+    )
+    clean = sum(
+        1 for r in results
+        if r.raw_label is not None and r.raw_label == ground_truth_label
     )
     false_positives = sum(
         1 for r in results
-        if r.raw_label == ground_truth_label and r.flagged_as_attack
+        if r.raw_label == ground_truth_label
+        and r.defended_label != r.raw_label
     )
 
-    clean = total - attacked
     return SequenceMetrics(
         degree=degree,
         total_frames=total,
@@ -79,7 +89,7 @@ def evaluate_all(
     defended_correct = sum(m.defended_correct for m in per_seq)
     attacked = sum(m.attacked_frames for m in per_seq)
     correctly_flagged = sum(m.correctly_flagged for m in per_seq)
-    clean = total - attacked
+    clean = sum(m.raw_correct for m in per_seq)
     false_positives = sum(m.false_positives for m in per_seq)
 
     return OverallMetrics(

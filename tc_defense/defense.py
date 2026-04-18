@@ -44,14 +44,12 @@ def _consensus(frames: list[Frame]) -> Optional[str]:
 
 def run_defense(sequence: Sequence, config: DefenseConfig) -> list[FrameResult]:
     frames = sequence.frames
-    n = len(frames)
-    half = config.window_size // 2
     results = []
 
     for i, frame in enumerate(frames):
-        lo = max(0, i - half)
-        hi = min(n, i + half + 1)
-        neighbors = [frames[j] for j in range(lo, hi) if j != i]
+        # Use only prior frames as temporal context for online evaluation.
+        lo = max(0, i - config.window_size)
+        neighbors = frames[lo:i]
 
         consensus = _consensus(neighbors)
 

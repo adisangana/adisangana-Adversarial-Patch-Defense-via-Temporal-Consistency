@@ -155,7 +155,7 @@ From the repository root, run:
 python3 pipeline.py --dataset 130
 ```
 
-This loads all degree sequences in the dataset, runs the sliding-window defense, prints a summary table, and saves plots under `results/` by default.
+This loads all degree sequences in the dataset, runs the temporal defense using the previous 5 frames by default, prints a summary table, and saves plots under `results/` by default.
 
 Typical generated files:
 
@@ -174,7 +174,7 @@ python3 pipeline.py --help
 Common flags:
 
 - `--dataset`: dataset directory containing paired `*.png` and `*.json` files
-- `--window-size`: sliding window size used for temporal consensus
+- `--window-size`: number of previous frames used for temporal consensus
 - `--brightness-thresh`: luminance-delta threshold used to suppress scene-change false positives
 - `--ground-truth`: expected correct class label, default `stop sign`
 - `--out-dir`: output directory for plots, default `results/`

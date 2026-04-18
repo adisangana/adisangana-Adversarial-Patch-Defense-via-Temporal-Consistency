@@ -25,7 +25,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--dataset", required=True, type=Path,
                    help="Dataset directory containing *.json and *.png files")
     p.add_argument("--window-size", type=int, default=5,
-                   help="Sliding window size W (default: 5)")
+                   help="Number of previous frames used for temporal consensus (default: 5)")
     p.add_argument("--brightness-thresh", type=float, default=10.0,
                    help="Mean luminance delta threshold for scene change (default: 10.0)")
     p.add_argument("--ground-truth", type=str, default="stop sign",
@@ -83,7 +83,7 @@ def main() -> None:
         brightness_threshold=args.brightness_thresh,
         ground_truth_label=args.ground_truth,
     )
-    print(f"\nRunning defense (window={config.window_size}, "
+    print(f"\nRunning defense (history={config.window_size}, "
           f"brightness_thresh={config.brightness_threshold}) ...")
 
     all_results = run_defense_all(sequences, config)

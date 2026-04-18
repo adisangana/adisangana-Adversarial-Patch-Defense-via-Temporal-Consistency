@@ -83,6 +83,7 @@ def plot_sequence(
     ax2.set_xlabel("Distance")
     ax2.legend(loc="upper left", fontsize=8)
     ax3.legend(loc="upper right", fontsize=8)
+    ax2.invert_xaxis()
 
     plt.tight_layout()
     if out_path:
@@ -163,6 +164,7 @@ def plot_brightness_gate(
     ax.set_xlabel("Distance")
     ax.set_ylabel("Mean luminance delta")
     ax.legend()
+    ax.invert_xaxis()
 
     plt.tight_layout()
     if out_path:

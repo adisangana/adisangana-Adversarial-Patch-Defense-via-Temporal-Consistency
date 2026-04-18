@@ -22,7 +22,7 @@ class Frame:
 @dataclass
 class Sequence:
     degree: int
-    frames: list[Frame]  # sorted by distance ascending, all have images
+    frames: list[Frame]  # sorted by distance descending, all have images
 
 
 def _parse_json(path: Path) -> Optional[Frame]:
@@ -50,8 +50,10 @@ def _parse_json(path: Path) -> Optional[Frame]:
 def load_dataset(dataset_dir: Path) -> list[Sequence]:
     """
     Load all complete (JSON + PNG) frames from dataset_dir, grouped into
-    Sequences by degree, sorted by distance. Frames missing their PNG are
-    skipped with a warning. Degrees where no frames have images are omitted.
+    Sequences by degree, sorted by distance descending so evaluation runs
+    from the maximum distance toward distance 0. Frames missing their PNG
+    are skipped with a warning. Degrees where no frames have images are
+    omitted.
     """
     json_files = sorted(dataset_dir.glob("*.json"))
     if not json_files:
@@ -72,7 +74,7 @@ def load_dataset(dataset_dir: Path) -> list[Sequence]:
         print(f"WARNING: skipped {skipped} frame(s) with missing PNG images", file=sys.stderr)
 
     sequences = [
-        Sequence(degree=deg, frames=sorted(frames, key=lambda f: f.distance))
+        Sequence(degree=deg, frames=sorted(frames, key=lambda f: f.distance, reverse=True))
         for deg, frames in sorted(by_degree.items())
     ]
 

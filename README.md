@@ -155,7 +155,7 @@ From the repository root, run:
 python3 pipeline.py --dataset 130
 ```
 
-This loads all degree sequences in the dataset, runs the temporal defense using the previous 5 frames by default, prints a summary table, and saves plots under `results/` by default.
+This loads all degree sequences in the dataset, evaluates each sequence from the maximum distance toward distance `0`, runs the temporal defense using the previous 5 evaluated frames by default, prints a summary table, and saves plots under `results/` by default.
 
 Typical generated files:
 

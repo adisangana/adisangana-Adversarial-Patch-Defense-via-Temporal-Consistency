@@ -1,120 +1,29 @@
 # CSE-5619-Temporal-Consistency
 
-This repository contains project utilities for temporal consistency experiments and a YOLOv5-based stop-sign evaluation script.
-
-## Stop Sign Evaluation with YOLOv5
-
-The main evaluation script is [`evaluate_stop_signs.py`](./evaluate_stop_signs.py).
-
-It runs YOLOv5 on a folder of images and exports a CSV report with:
-
-- `brightness`
-- `degree`
-- `distance`
-- `top_classified_object`
-- `top_classified_object_accuracy`
-- `stopsign_accuracy`
-
-The script extracts `brightness`, `degree`, and `distance` from filenames such as `brightness130_degree00_distance07.png`.
-
-If YOLOv5 does not detect anything in an image, the object field is blank and both confidence values are `0.000000`.
+This repository contains project utilities for temporal consistency experiments and a YOLOv5-based evaluation script.
 
 ## Setup
 
-```bash
-git clone <your-repo-url>
-cd CSE-5619-Temporal-Consistency
+1. **Clone the repository and enter the directory:**
+   ```bash
+   git clone <your-repo-url>
+   cd CSE-5619-Temporal-Consistency
+   ```
 
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-chmod +x evaluate_stop_signs.py
-```
-
-## Run the Evaluator
-
-From the repository root, run:
-
-```bash
-./evaluate_stop_signs.py --images-dir 130 --device cpu
-```
-
-If your image set is stored somewhere else on disk, pass that absolute or relative path through `--images-dir`.
-
-Typical console output:
-
-```text
-YOLOv5 🚀 ...
-Fusing layers...
-YOLOv5s summary: ...
-Adding AutoShape...
-Processed 30 image(s). Stop sign detected in 11 image(s).
-```
-
-If `--output-csv` is omitted, the script writes the report inside the image folder using this pattern:
-
-```text
-<images-dir>/<folder-name>_yolov5_stop_sign_report.csv
-```
-
-## Common Options
-
-Show all CLI options:
-
-```bash
-./evaluate_stop_signs.py --help
-```
-
-Common flags:
-
-- `--images-dir`: folder containing input images
-- `--output-csv`: optional path for the CSV report; if omitted, the report is written inside `--images-dir`
-- `--weights`: YOLOv5 model name such as `yolov5s`, or a path to a custom `.pt` model
-- `--device`: `cpu`, `mps`, `0`, `0,1`, etc.
-- `--batch-size`: number of images per inference batch
-- `--imgsz`: inference image size
-- `--conf-thres`: confidence threshold
-- `--iou-thres`: IoU threshold for NMS
-- `--stop-label`: class label to treat as the stop-sign class
-- `--recursive`: scan subdirectories under the image directory
-
-By default, the script only scans image files directly inside `--images-dir`. Use `--recursive` if you want to include subdirectories.
-
-## Using a Custom Model
-
-If you have your own trained YOLOv5 weights:
-
-```bash
-./evaluate_stop_signs.py \
-  --images-dir /path/to/images \
-  --output-csv /path/to/results.csv \
-  --device cpu \
-  --weights /path/to/best.pt \
-  --stop-label "stop sign"
-```
-
-If your model uses a different class name such as `stopsign`, pass that value through `--stop-label`.
-
-## Supported Image Formats
-
-The script scans these file extensions:
-
-- `.bmp`
-- `.jpeg`
-- `.jpg`
-- `.png`
-- `.tif`
-- `.tiff`
-- `.webp`
+2. **Set up a Python virtual environment and install dependencies:**
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
 
 ## First-Run Download Behavior
 
-On first use, if the default YOLOv5 assets are not already available, the script will:
-
-1. load the official YOLOv5 code through `torch.hub`
-2. download the default `yolov5s` weights if needed
-3. cache YOLOv5 files under `.cache/torch`
+On first use, if the default YOLOv5 assets are not already available, the pipeline will:
+1. Load the official YOLOv5 code through `torch.hub`.
+2. Download the default `yolov5s` weights if needed.
+3. Cache YOLOv5 files under `.cache/torch`.
 
 If `yolov5s.pt` already exists in the repository root, the script will reuse it.
 
@@ -129,7 +38,7 @@ It loads a dataset directory of matching `*.png` and `*.json` frames, applies th
 `pipeline.py` expects image and detection files in the same folder, for example:
 
 ```text
-130/
+data/
   brightness130_degree00_distance00.png
   brightness130_degree00_distance00.json
   brightness130_degree00_distance01.png
@@ -143,10 +52,12 @@ The JSON files should follow the schema written by [`detect.py`](./detect.py). F
 From the repository root, run:
 
 ```bash
-python3 pipeline.py --dataset 130
+python3 pipeline.py --dataset data
 ```
 
 This loads all degree sequences in the dataset, evaluates each sequence from the maximum distance toward distance `0`, runs the temporal defense using the previous 5 evaluated frames by default, prints a summary table, and saves plots under `results/` by default.
+
+### Understanding the Plots
 
 Typical generated files:
 
@@ -154,16 +65,16 @@ Typical generated files:
 - `results/brightness_degree00.png` (Brightness analysis plot showing scene stability gates)
 - `results/summary.png` (Overall performance summary across all sequences)
 
-**Understanding the Plots:**
-*   **`sequence_degree*.png` Keys:**
+**Plot Keys:**
+*   **`sequence_degree*.png`:**
     *   **Raw Labels:** The original classification from YOLOv5.
     *   **Defended Labels:** The final classification after applying the temporal consistency defense.
     *   **Flagged as Attack:** Indicates frames where the defense identified an inconsistency between the raw label and the temporal consensus.
     *   **Consensus:** The temporal majority vote over the preceding frames (window size).
-*   **`brightness_degree*.png` Keys:**
+*   **`brightness_degree*.png`:**
     *   **Luminance (blue line):** Mean image brightness for the current frame.
     *   **Window Average (orange line):** The average mean brightness of the preceding frames in the temporal window.
-    *   **Delta Gate (red shaded area):** Frames where the absolute difference between current luminance and window average exceeds the `brightness-thresh`. These frames are treated as scene changes (e.g. abrupt lighting shifts) and temporal consistency checks are bypassed.
+    *   **Delta Gate (red shaded area):** Frames where the absolute difference between current luminance and window average exceeds the `brightness-thresh`. These frames are treated as scene changes (e.g., abrupt lighting shifts) and temporal consistency checks are bypassed.
 
 ### Pipeline Options
 
@@ -191,7 +102,7 @@ If you want the pipeline to rerun YOLOv5 and overwrite existing detection JSON f
 
 ```bash
 python3 pipeline.py \
-  --dataset 130 \
+  --dataset data \
   --run-yolo \
   --yolo-model yolov5s \
   --yolo-conf 0.25 \
@@ -204,15 +115,13 @@ Relevant YOLO flags:
 - `--yolo-model`: YOLOv5 model variant to load (e.g., `yolov5s`, `yolov5m`).
 - `--yolo-conf`: confidence threshold passed to YOLOv5. Lowering this increases recall but might introduce false positives.
 
-## Other Project Scripts
+## Core Modules
 
-- [`convert_raw.py`](./convert_raw.py)
-- [`detect.py`](./detect.py)
-- [`pipeline.py`](./pipeline.py)
-- [`visualize.py`](./visualize.py)
+- [`pipeline.py`](./pipeline.py): The main entry point for running the temporal consistency defense and generating evaluation metrics.
+- [`detect.py`](./detect.py): A utility to independently run YOLOv5 inference on a directory of images and generate the `.json` files required by the pipeline.
+- [`tc_defense/`](./tc_defense/): The package containing the core logic for the temporal defense, dataset loading, and visualization.
 
 ## Notes
 
-- If `./.venv/bin/python` exists, `evaluate_stop_signs.py` automatically re-runs itself with that interpreter.
 - The scripts suppress the noisy `urllib3` LibreSSL warning and the YOLOv5 `amp.autocast` deprecation warning during inference.
 - Large model weights and virtual environments usually should not be committed to Git. In most cases, commit the source files and let users install dependencies locally.

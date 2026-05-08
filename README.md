@@ -27,6 +27,24 @@ On first use, if the default YOLOv5 assets are not already available, the pipeli
 
 If `yolov5s.pt` already exists in the repository root, the script will reuse it.
 
+## Dataset Preparation Utilities
+
+Before running the temporal consistency defense, your dataset needs to be correctly formatted and annotated. We provide scripts to automate this process.
+
+### Formatting Images
+If you have directories of sequentially captured `.png` images organized by lighting condition, use `rename_dataset_files.py` to reliably rename them into the expected `brightness{B}_degree{D}_distance{dist}.png` format.
+
+```bash
+python rename_dataset_files.py <path_to_parent_dataset_folder>
+```
+
+### Generating Detection JSONs in Bulk
+To generate YOLOv5 detection `.json` files across multiple dataset directories automatically, use `run_yolo_datasets.py`. Edit the script to define your base dataset directories, then run:
+
+```bash
+python run_yolo_datasets.py
+```
+
 ## Temporal Consistency Pipeline
 
 The end-to-end defense entry point is [`pipeline.py`](./pipeline.py).
@@ -115,10 +133,29 @@ Relevant YOLO flags:
 - `--yolo-model`: YOLOv5 model variant to load (e.g., `yolov5s`, `yolov5m`).
 - `--yolo-conf`: confidence threshold passed to YOLOv5. Lowering this increases recall but might introduce false positives.
 
+## Automated Experiment Runner
+
+To run large-scale evaluations across multiple datasets, lighting conditions, and temporal window sizes, use the `experiment_runner.py` script. 
+
+This script acts as a wrapper around `pipeline.py` and automatically:
+- Iterates through defined configurations.
+- Aggregates all evaluation metrics into a single `experiment_summary.csv` file.
+- Saves individual run statistics into respective `report.json` files.
+- Organizes summary plots for straightforward side-by-side comparison.
+
+To use it, update the `base_dataset_dirs` list inside the script with your dataset paths, then execute:
+
+```bash
+python experiment_runner.py
+```
+
 ## Core Modules
 
 - [`pipeline.py`](./pipeline.py): The main entry point for running the temporal consistency defense and generating evaluation metrics.
+- `experiment_runner.py`: Automates large-scale evaluations across multiple configurations and outputs CSV/JSON summaries.
 - [`detect.py`](./detect.py): A utility to independently run YOLOv5 inference on a directory of images and generate the `.json` files required by the pipeline.
+- `run_yolo_datasets.py`: Batch script to execute `detect.py` over multiple dataset directories automatically.
+- `rename_dataset_files.py`: Utility to rename raw dataset images into the standardized format the pipeline expects.
 - [`tc_defense/`](./tc_defense/): The package containing the core logic for the temporal defense, dataset loading, and visualization.
 
 ## Notes

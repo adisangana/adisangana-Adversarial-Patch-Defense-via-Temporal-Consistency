@@ -1,4 +1,4 @@
-# CSE-5619-Temporal-Consistency
+# Temporal-Consistency
 
 This repository contains project utilities for temporal consistency experiments and a YOLOv5-based evaluation script.
 
@@ -7,7 +7,7 @@ This repository contains project utilities for temporal consistency experiments 
 1. **Clone the repository and enter the directory:**
    ```bash
    git clone <your-repo-url>
-   cd CSE-5619-Temporal-Consistency
+   cd Temporal-Consistency
    ```
 
 2. **Set up a Python virtual environment and install dependencies:**
